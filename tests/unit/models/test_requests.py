@@ -1,5 +1,5 @@
 import pytest
-
+from pydantic import ValidationError
 from models.requests import QueryRequest, Attachment, FeedbackRequest
 
 
@@ -175,4 +175,16 @@ class TestFeedbackRequest:
                 llm_response="OpenStack is a cloud computing platform.",
                 sentiment=None,
                 user_feedback=None,
+            )
+
+    def test_feedback_too_long(self) -> None:
+        """Test that user feedback is limited to 4096 characters."""
+        with pytest.raises(
+            ValidationError, match="should have at most 4096 characters"
+        ):
+            FeedbackRequest(
+                conversation_id="12345678-abcd-0000-0123-456789abcdef",
+                user_question="What is this?",
+                llm_response="Some response",
+                user_feedback="a" * 4097,
             )

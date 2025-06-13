@@ -2,7 +2,7 @@
 
 from typing import Optional, Self
 
-from pydantic import BaseModel, model_validator, field_validator
+from pydantic import BaseModel, model_validator, field_validator, Field
 from llama_stack_client.types.agents.turn_create_params import Document
 
 from utils import suid
@@ -159,7 +159,13 @@ class FeedbackRequest(BaseModel):
     user_question: str
     llm_response: str
     sentiment: Optional[int] = None
-    user_feedback: Optional[str] = None
+    # Optional user feedback limited to 1–4096 characters to prevent abuse.
+    user_feedback: Optional[str] = Field(
+        default=None,
+        max_length=4096,
+        description="Feedback on the LLM response.",
+        examples=["I'm not satisfied with the response because it is too vague."],
+    )
 
     # provides examples for /docs endpoint
     model_config = {

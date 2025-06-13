@@ -42,9 +42,24 @@
 5. Submit PR from your fork to main branch of the project repo
 
 
-## Setting up your development environment
+## Prerequisities
+
+- git
+- Python 3.11, 3.12, or 3.13
+- pip
 
 The development requires at least [Python 3.11](https://docs.python.org/3/whatsnew/3.11.html) due to significant improvement on performance, optimizations which benefit modern ML, AI, LLM, NL stacks, and improved asynchronous processing capabilities. It is also possible to use Python 3.12 or Python 3.13.
+
+
+
+### Tooling installation
+
+1. `pip install --user pdm`
+1. `pdm --version` -- should return no error
+
+
+
+## Setting up your development environment
 
 ```bash
 # clone your fork
@@ -53,8 +68,8 @@ git clone https://github.com/YOUR-GIT-PROFILE/lightspeed-stack.git
 # move into the directory
 cd lightspeed-stack
 
-# setup your environment with pdm
-pdm install
+# setup your devel environment with pdm
+pdm install -G dev
 
 # Now you can run test commands trough make targets, or prefix the rest of commands with `pdm run`, eg. `pdm run make test`
 
@@ -78,5 +93,63 @@ make check-types
 ```
 
 Happy hacking!
+
+
+## Automation
+
+### Pre-commit hook settings
+
+It is possible to run formatters and linters automatically for all commits. You just need
+to copy file `hooks/pre-commit` into subdirectory `.git/hooks/`. It must be done manually
+because the copied file is an executable script (so from GIT point of view it is unsafe
+to enable it automatically).
+
+
+### Type hints checks
+
+It is possible to check if type hints added into the code are correct and whether assignments, function calls etc. use values of the right type. This check is invoked by following command:
+
+```
+make check-types
+```
+
+Please note that type hints check might be very slow on the first run.
+Subsequent runs are much faster thanks to the cache that Mypy uses. This check
+is part of a CI job that verifies sources.
+
+
+### Linters
+
+_Black_, _Ruff_, Pyright, and _Pylint_ tools are used as linters. There are a bunch of linter rules enabled for this repository. All of them are specified in `pyproject.toml`, such us in sections `[tool.ruff]` and `[tool.pylint."MESSAGES CONTROL"]`. Some specific rules can be disabled using `ignore` parameter (empty now).
+
+List of all _Ruff_ rules recognized by Ruff can be retrieved by:
+
+
+```
+ruff linter
+```
+
+Description of all _Ruff_ rules are available on https://docs.astral.sh/ruff/rules/
+
+Ruff rules can be disabled in source code (for given line or block) by using special `noqa` comment line. For example:
+
+```python
+# noqa: E501
+```
+
+List of all _Pylint_ rules can be retrieved by:
+
+```
+pylint --list-msgs
+```
+
+Description of all rules are available on https://pylint.readthedocs.io/en/latest/user_guide/checkers/features.html
+
+To disable _Pylint_ rule in source code, the comment line in following format can be used:
+
+```python
+# pylint: disable=C0415
+```
+
 
 
