@@ -152,7 +152,7 @@ def retrieve_response(
     system_prompt = (
         query_request.system_prompt
         if query_request.system_prompt
-        else constants.DEFAULT_SYSTEM_PROMPT
+        else configuration.llama_stack_configuration.default_system_prompt
     )
     logger.debug("Using system prompt: %s", system_prompt)
 

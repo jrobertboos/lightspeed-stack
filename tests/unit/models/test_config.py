@@ -47,7 +47,9 @@ def test_service_configuration_workers_value() -> None:
 def test_llama_stack_configuration_constructor() -> None:
     """Test the LLamaStackConfiguration constructor."""
     llama_stack_configuration = LLamaStackConfiguration(
-        use_as_library_client=True, library_client_config_path="foo"
+        use_as_library_client=True,
+        library_client_config_path="foo",
+        default_system_prompt="You are a helpful assistant",
     )
     assert llama_stack_configuration is not None
 
@@ -310,7 +312,9 @@ def test_dump_configuration(tmp_path) -> None:
         name="test_name",
         service=ServiceConfiguration(),
         llama_stack=LLamaStackConfiguration(
-            use_as_library_client=True, library_client_config_path="foo"
+            use_as_library_client=True,
+            library_client_config_path="foo",
+            default_system_prompt="You are a helpful assistant",
         ),
         user_data_collection=UserDataCollection(
             feedback_disabled=True, feedback_storage=None
@@ -354,6 +358,7 @@ def test_dump_configuration(tmp_path) -> None:
                 "api_key": None,
                 "use_as_library_client": True,
                 "library_client_config_path": "foo",
+                "default_system_prompt": "You are a helpful assistant",
             },
             "user_data_collection": {
                 "feedback_disabled": True,
@@ -374,7 +379,9 @@ def test_dump_configuration_with_one_mcp_server(tmp_path) -> None:
         name="test_name",
         service=ServiceConfiguration(),
         llama_stack=LLamaStackConfiguration(
-            use_as_library_client=True, library_client_config_path="foo"
+            use_as_library_client=True,
+            library_client_config_path="foo",
+            default_system_prompt="You are a helpful assistant",
         ),
         user_data_collection=UserDataCollection(
             feedback_disabled=True, feedback_storage=None
@@ -414,6 +421,7 @@ def test_dump_configuration_with_one_mcp_server(tmp_path) -> None:
                 "api_key": None,
                 "use_as_library_client": True,
                 "library_client_config_path": "foo",
+                "default_system_prompt": "You are a helpful assistant",
             },
             "user_data_collection": {
                 "feedback_disabled": True,
@@ -442,7 +450,9 @@ def test_dump_configuration_with_more_mcp_servers(tmp_path) -> None:
         name="test_name",
         service=ServiceConfiguration(),
         llama_stack=LLamaStackConfiguration(
-            use_as_library_client=True, library_client_config_path="foo"
+            use_as_library_client=True,
+            library_client_config_path="foo",
+            default_system_prompt="You are a helpful assistant",
         ),
         user_data_collection=UserDataCollection(
             feedback_disabled=True, feedback_storage=None
@@ -488,6 +498,7 @@ def test_dump_configuration_with_more_mcp_servers(tmp_path) -> None:
                 "api_key": None,
                 "use_as_library_client": True,
                 "library_client_config_path": "foo",
+                "default_system_prompt": "You are a helpful assistant",
             },
             "user_data_collection": {
                 "feedback_disabled": True,

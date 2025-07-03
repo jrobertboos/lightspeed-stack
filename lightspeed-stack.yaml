@@ -15,6 +15,7 @@ llama_stack:
   # library_client_config_path: <path-to-llama-stack-run.yaml-file>
   url: http://localhost:8321
   api_key: xyzzy
+  default_system_prompt: "You are a helpful assistant"
 user_data_collection:
   feedback_disabled: false
   feedback_storage: "/tmp/data/feedback"

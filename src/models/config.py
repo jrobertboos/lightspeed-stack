@@ -6,6 +6,8 @@ from pydantic import BaseModel, model_validator, FilePath
 
 from typing_extensions import Self
 
+from constants import DEFAULT_SYSTEM_PROMPT
+
 
 class TLSConfiguration(BaseModel):
     """TLS configuration."""
@@ -58,6 +60,7 @@ class LLamaStackConfiguration(BaseModel):
     api_key: Optional[str] = None
     use_as_library_client: Optional[bool] = None
     library_client_config_path: Optional[str] = None
+    default_system_prompt: Optional[str] = None
 
     @model_validator(mode="after")
     def check_llama_stack_model(self) -> Self:
@@ -79,6 +82,8 @@ class LLamaStackConfiguration(BaseModel):
                 raise ValueError(
                     "LLama stack library client mode is enabled but a configuration file path is not specified"  # noqa: C0301
                 )
+        if self.default_system_prompt is None:
+            self.default_system_prompt = DEFAULT_SYSTEM_PROMPT
         return self
 
 

@@ -4,6 +4,8 @@ import pytest
 from configuration import AppConfig
 from models.config import ModelContextProtocolServer
 
+import constants
+
 
 def test_default_configuration() -> None:
     cfg = AppConfig()
@@ -44,6 +46,7 @@ def test_init_from_dict() -> None:
             "api_key": "xyzzy",
             "url": "http://x.y.com:1234",
             "use_as_library_client": False,
+            "default_system_prompt": "You are a helpful assistant",
         },
         "user_data_collection": {
             "feedback_disabled": True,
@@ -66,6 +69,10 @@ def test_init_from_dict() -> None:
     assert cfg.llama_stack_configuration.api_key == "xyzzy"
     assert cfg.llama_stack_configuration.url == "http://x.y.com:1234"
     assert cfg.llama_stack_configuration.use_as_library_client is False
+    assert (
+        cfg.llama_stack_configuration.default_system_prompt
+        == "You are a helpful assistant"
+    )
 
     # check for service_configuration subsection
     assert cfg.service_configuration.host == "localhost"
@@ -95,6 +102,7 @@ def test_init_from_dict_with_mcp_servers() -> None:
             "api_key": "xyzzy",
             "url": "http://x.y.com:1234",
             "use_as_library_client": False,
+            "default_system_prompt": "You are a helpful assistant",
         },
         "user_data_collection": {
             "feedback_disabled": True,
@@ -140,6 +148,7 @@ llama_stack:
   use_as_library_client: false
   url: http://localhost:8321
   api_key: xyzzy
+  default_system_prompt: "You are a helpful assistant"
 user_data_collection:
   feedback_disabled: true
 mcp_servers: []
@@ -172,6 +181,7 @@ llama_stack:
   use_as_library_client: false
   url: http://localhost:8321
   api_key: test-key
+  default_system_prompt: "You are a helpful assistant"
 user_data_collection:
   feedback_disabled: true
 mcp_servers:
@@ -211,6 +221,7 @@ def test_mcp_servers_property_empty() -> None:
             "api_key": "test-key",
             "url": "http://localhost:8321",
             "use_as_library_client": False,
+            "default_system_prompt": "You are a helpful assistant",
         },
         "user_data_collection": {
             "feedback_disabled": True,
@@ -241,6 +252,7 @@ def test_mcp_servers_property_with_servers() -> None:
             "api_key": "test-key",
             "url": "http://localhost:8321",
             "use_as_library_client": False,
+            "default_system_prompt": "You are a helpful assistant",
         },
         "user_data_collection": {
             "feedback_disabled": True,
@@ -261,6 +273,35 @@ def test_mcp_servers_property_with_servers() -> None:
     assert isinstance(servers[0], ModelContextProtocolServer)
     assert servers[0].name == "test-server"
     assert servers[0].url == "http://localhost:8080"
+
+
+def test_default_system_prompt_property_empty() -> None:
+    """Test default_system_prompt property returns constants.DEFAULT_SYSTEM_PROMPT when no default system prompt is provided."""
+    config_dict = {
+        "name": "test",
+        "service": {
+            "host": "localhost",
+            "port": 8080,
+            "auth_enabled": False,
+            "workers": 1,
+            "color_log": True,
+            "access_log": True,
+        },
+        "llama_stack": {
+            "api_key": "test-key",
+            "url": "http://localhost:8321",
+            "use_as_library_client": False,
+        },
+        "user_data_collection": {
+            "feedback_disabled": True,
+        },
+        "mcp_servers": [],
+    }
+    cfg = AppConfig()
+    cfg.init_from_dict(config_dict)
+
+    default_system_prompt = cfg.llama_stack_configuration.default_system_prompt
+    assert default_system_prompt == constants.DEFAULT_SYSTEM_PROMPT
 
 
 def test_configuration_not_loaded():

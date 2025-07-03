@@ -14,7 +14,6 @@ from fastapi.responses import StreamingResponse
 from client import get_async_llama_stack_client
 from configuration import configuration
 from models.requests import QueryRequest
-import constants
 from utils.auth import auth_dependency
 from utils.common import retrieve_user_id
 
@@ -185,7 +184,7 @@ async def retrieve_response(
     system_prompt = (
         query_request.system_prompt
         if query_request.system_prompt
-        else constants.DEFAULT_SYSTEM_PROMPT
+        else configuration.llama_stack_configuration.default_system_prompt
     )
     logger.debug("Using system prompt: %s", system_prompt)
 
