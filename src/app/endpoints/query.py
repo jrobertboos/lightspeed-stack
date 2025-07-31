@@ -109,6 +109,8 @@ def get_agent(  # pylint: disable=too-many-arguments,too-many-positional-argumen
 
     return agent, conversation_id
 
+METADATA_PATTERN = re.compile(r"\nMetadata: (\{.+})\n")
+
 
 @router.post("/query", responses=query_response)
 def query_endpoint_handler(
@@ -130,7 +132,7 @@ def query_endpoint_handler(
         model_id, provider_id = select_model_and_provider_id(
             client.models.list(), query_request
         )
-        response, conversation_id = retrieve_response(
+        response, conversation_id, metadata_map = retrieve_response(
             client,
             model_id,
             query_request,
@@ -154,8 +156,14 @@ def query_endpoint_handler(
                 truncated=False,  # TODO(lucasagomes): implement truncation as part of quota work
                 attachments=query_request.attachments or [],
             )
-
-        return QueryResponse(conversation_id=conversation_id, response=response)
+        referenced_documents = [
+            {
+                "doc_url": v["docs_url"],
+                "doc_title": v["title"],
+            }
+            for v in metadata_map.values()
+        ]
+        return QueryResponse(conversation_id=conversation_id, response=response, referenced_documents=referenced_documents)
 
     # connection to Llama Stack server
     except APIConnectionError as e:
@@ -256,7 +264,7 @@ def retrieve_response(  # pylint: disable=too-many-locals
     query_request: QueryRequest,
     token: str,
     mcp_headers: dict[str, dict[str, str]] | None = None,
-) -> tuple[str, str]:
+) -> tuple[str, str, dict[str, dict[str, Any]]]:
     """Retrieve response from LLMs and agents."""
     available_input_shields = [
         shield.identifier for shield in filter(is_input_shield, client.shields.list())
@@ -289,6 +297,8 @@ def retrieve_response(  # pylint: disable=too-many-locals
         available_output_shields,
         query_request.conversation_id,
     )
+
+    metadata_map: dict[str, dict[str, Any]] = {}
 
     # preserve compatibility when mcp_headers is not provided
     if mcp_headers is None:
@@ -327,8 +337,28 @@ def retrieve_response(  # pylint: disable=too-many-locals
             # Metric for LLM validation errors
             metrics.llm_calls_validation_errors_total.inc()
             break
+        elif step.step_type == "tool_execution":
+            for r in step.tool_responses:
+                if r.tool_name == "knowledge_search" and r.content:
+                    for i, text_content_item in enumerate(r.content):
+                        if isinstance(text_content_item, TextContentItem):
+                            if i == 0:
+                                summary = text_content_item.text
+                                newline_pos = summary.find("\n")
+                                if newline_pos > 0:
+                                    summary = summary[:newline_pos]
+                            for match in METADATA_PATTERN.findall(text_content_item.text):
+                                try:
+                                    meta = ast.literal_eval(match)
+                                    if "document_id" in meta:
+                                        metadata_map[meta["document_id"]] = meta
+                                except Exception:  # pylint: disable=broad-except
+                                    logger.debug(
+                                        "An exception was thrown in processing %s",
+                                        match,
+                                    )
 
-    return str(response.output_message.content), conversation_id  # type: ignore[union-attr]
+    return str(response.output_message.content), conversation_id, metadata_map  # type: ignore[union-attr]
 
 
 def validate_attachments_metadata(attachments: list[Attachment]) -> None:

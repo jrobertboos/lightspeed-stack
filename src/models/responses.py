@@ -28,10 +28,12 @@ class QueryResponse(BaseModel):
     Attributes:
         conversation_id: The optional conversation ID (UUID).
         response: The response.
+        referenced_documents: The optional URLs and titles for the documents used
     """
 
     conversation_id: Optional[str] = None
     response: str
+    referenced_documents: list[dict[str, str]]
 
     # provides examples for /docs endpoint
     model_config = {
@@ -40,6 +42,12 @@ class QueryResponse(BaseModel):
                 {
                     "conversation_id": "123e4567-e89b-12d3-a456-426614174000",
                     "response": "Operator Lifecycle Manager (OLM) helps users install...",
+                    "referenced_documents": [
+                        {
+                            "doc_url": "https://redhat.com",
+                            "doc_title": "Red Hat",
+                        }
+                    ],
                 }
             ]
         }
