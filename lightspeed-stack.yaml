@@ -31,3 +31,8 @@ conversation_cache:
 authentication:
   module: "noop"
 
+# Demo skills (see demo/skills/). Loaded at startup; restart after edits.
+skills:
+  paths:
+    - demo/skills
+
