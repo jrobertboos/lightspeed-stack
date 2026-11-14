@@ -7,14 +7,16 @@ import json
 import sqlite3
 import uuid
 from pathlib import Path
-from typing import Any, Final, Literal, Optional
+from typing import Any, Final, Literal, Optional, Self
 
 import faiss
 import numpy as np
 from pydantic_ai.embeddings import Embedder, EmbeddingSettings
 
 from knowledge.sources.base import VectorStore, VectorStoreKnowledgeSource
+from knowledge.sources.utils import embedder_for_model, retrieval_mode
 from knowledge.types import KnowledgeChunk, KnowledgeMatch, KnowledgeReadiness
+from models.config import RagConfiguration, RagStore
 
 _KV_NAMESPACE: Final[str] = "vector_io::faiss"
 _KV_VERSION: Final[str] = "v3"
@@ -205,3 +207,37 @@ class FaissKnowledgeSource(VectorStoreKnowledgeSource):
 
         """
         return KnowledgeReadiness(status="ready", message="FAISS index loaded")
+
+    @classmethod
+    def from_rag_configuration(cls, rag: RagConfiguration, store: RagStore) -> Self:
+        """Build a FAISS source for one BYOK store.
+
+        Args:
+            rag: RAG configuration. Supplies retrieval mode and the BYOK
+                chunk limit used as ``top_k``.
+            store: FAISS store entry to load.
+
+        Returns:
+            A source named ``store.rag_id``.
+
+        Raises:
+            ValueError: If ``store`` is not a FAISS store or ``db_path`` is
+                missing.
+
+        """
+        if store.backend != "faiss":
+            raise ValueError(
+                f"Cannot build a FAISS knowledge source for backend {store.backend!r}"
+            )
+        if not store.db_path:
+            raise ValueError(f"db_path is required for FAISS store {store.rag_id!r}")
+        return cls(
+            name=store.rag_id,
+            db_path=store.db_path,
+            vector_store_id=store.vector_db_id,
+            embedder=embedder_for_model(store.embedding_model),
+            embedding_settings={"dimensions": store.embedding_dimension},
+            top_k=rag.byok.max_chunks,
+            score_threshold=store.relevance_cutoff_score,
+            mode=retrieval_mode(rag, store.rag_id),
+        )
